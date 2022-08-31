@@ -1,0 +1,56 @@
+截取数据
+substring_index(column,',',-1)  可以把某一列中按逗号分开，再取最后一列的数据
+
+select * from t_score where degree in (85,86,88)
+
+select * from student where class = '95031' or sex = '女’
+
+select * from student where name = '1839‘ and sex = '女'
+
+select * from student order by class desc
+
+select avg(score) from t_score where cid like '3%'
+group by cid having count(cid) > 2
+
+
+
+select emp_name,
+       emp_mgr,
+       dealer_id,
+       sales,
+       sum(sales) over ()                                                                                    as sample1, -- 所有sales和
+       sum(sales) over (partition by dealer_id)                                                              as sample2, -- 按dealer_id分组，组内数据累加
+       sum(sales) over (partition by dealer_id ORDER BY stat_date)                                           as sample3, -- 按dealer_id分组，时间排序，组内数据逐个相加
+       sum(sales)
+           OVER (PARTITION BY dealer_id ORDER BY stat_date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) as sample4, -- 按dealer_id分组，时间排序，组内由起点到当前行的聚合
+       sum(sales)
+           OVER (PARTITION BY dealer_id ORDER BY stat_date ROWS BETWEEN 1 PRECEDING and CURRENT ROW)         as sample5, -- 按dealer_id分组，时间排序，组内当前行和前面一行做聚合
+       sum(sales)
+           over (PARTITION BY dealer_id ORDER BY stat_date ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING)         as sample6, -- 按dealer_id分组，时间排序，组内当前行和前一行和后一行聚合
+       sum(sales)
+           over (PARTITION BY dealer_id ORDER BY stat_date ROWS BETWEEN CURRENT ROW and UNBOUNDED FOLLOWING) as sample7 -- 按dealer_id分组，时间排序，组内当前行和后面所有行
+from q1_sales;
+
+
+select stat_date,
+	   sales,
+       sum(sales) over (order by stat_date 
+						rows between current row and 6 following)
+	   sum(sales) over (order by stat_date
+						rows between current row and (case when last_day(stat_date) = '30' 
+														   then 30 
+														   when last_day(stat_date) = '31' 
+														   then 31 
+														   else 28 
+														   end) following)
+from sales;
+
+
+select stu_id from t_score group by stu_id having min(score) > 70 and max(score)<90
+
+
+
+select a.sid,a.cid,b.rank  (这边a表和b表没有字段相同但仍然可以连接，依靠的就是a表的某个字段和b表的两个字段之间的关系)
+from t_score a,t_grade b    （就是做了个笛卡尔积，每一个成绩都对应5个等地，然后一一比对）
+where a.degree between b.low and b.up
+order by a.sid
